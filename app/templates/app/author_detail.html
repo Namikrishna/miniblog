@@ -1,0 +1,39 @@
+{% extends "app/base.html" %}
+
+{% block title %}{{ author.user.username }}{% endblock %}
+
+{% block content %}
+<div class="author-profile mb-5">
+    <h1>{{ author.user.username }}</h1>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">About</h5>
+            <p class="card-text">{{ author.bio|linebreaks }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="author-blogs">
+    <h2>Blog Posts by {{ author.user.username }}</h2>
+    <div class="row">
+        {% for blog in blogs %}
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'app:blog-detail' blog.pk %}" class="text-decoration-none">{{ blog.title }}</a>
+                    </h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ blog.post_date|date:"F d, Y" }}</h6>
+                    <p class="card-text">{{ blog.content|truncatewords:50 }}</p>
+                    <a href="{% url 'app:blog-detail' blog.pk %}" class="btn btn-primary">Read More</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p>No blog posts available from this author.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

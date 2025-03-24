@@ -1,0 +1,26 @@
+{% extends "app/base.html" %}
+
+{% block title %}All Bloggers{% endblock %}
+
+{% block content %}
+<h1>All Bloggers</h1>
+<div class="row">
+    {% for author in authors %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="{% url 'app:author-detail' author.pk %}" class="text-decoration-none">{{ author.user.username }}</a>
+                </h5>
+                <p class="card-text">{{ author.bio|truncatewords:30 }}</p>
+                <a href="{% url 'app:author-detail' author.pk %}" class="btn btn-primary">View Profile</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p>No bloggers available.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

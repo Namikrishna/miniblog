@@ -1,0 +1,201 @@
+{% extends "app/base.html" %}
+
+{% block title %}Blog Posts{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <h1 class="mb-4">Blog Posts</h1>
+
+            <!-- Search Form -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="d-flex">
+                        <input type="text" name="q" class="form-control me-2" placeholder="Search posts..." value="{{ search_query }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Blog Posts -->
+            {% if blogs %}
+                {% for blog in blogs %}
+                    <div class="card mb-4">
+                        {% if blog.image %}
+                            <img src="{{ blog.image.url }}" class="card-img-top" alt="{{ blog.title }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h2 class="card-title">
+                                <a href="{% url 'app:blog-detail' blog.pk %}" class="text-decoration-none">
+                                    {{ blog.title }}
+                                </a>
+                            </h2>
+                            <p class="card-text text-muted">
+                                By {{ blog.author.username }} on {{ blog.post_date|date:"F d, Y" }}
+                            </p>
+                            <p class="card-text">{{ blog.content|truncatewords:50 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="blog-stats">
+                                    <span class="me-3">
+                                        <i class="fas fa-star text-warning"></i> {{ blog.average_rating|floatformat:1 }}
+                                        ({{ blog.total_ratings }} ratings)
+                                    </span>
+                                    <span class="me-3">
+                                        <i class="fas fa-thumbs-up text-primary"></i> {{ blog.likes_count }}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-thumbs-down text-danger"></i> {{ blog.dislikes_count }}
+                                    </span>
+                                </div>
+                                <a href="{% url 'app:blog-detail' blog.pk %}" class="btn btn-primary">
+                                    Read More
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No blog posts found. {% if search_query %}Try a different search query.{% else %}Be the first to create a post!{% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        {% if user.is_authenticated %}
+                            <li class="mb-2">
+                                <a href="{% url 'app:blog-create' %}" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-plus-circle me-2"></i>Create New Post
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="{% url 'app:author-dashboard' %}" class="btn btn-outline-secondary btn-sm w-100">
+                                    <i class="fas fa-tachometer-alt me-2"></i>My Dashboard
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="mb-2">
+                                <a href="{% url 'login' %}" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Post
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            {% if user.is_authenticated %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">My Profile</h5>
+                    <div class="text-center mb-3">
+                        {% if user.author.profile_picture %}
+                            <img src="{{ user.author.profile_picture.url }}" alt="Profile Picture" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <i class="fas fa-user-circle fa-5x text-secondary"></i>
+                        {% endif %}
+                    </div>
+                    <p class="text-center mb-2">{{ user.username }}</p>
+                    <p class="text-center small text-muted">{{ user.author.bio|truncatewords:20 }}</p>
+                    <a href="{% url 'app:profile-update' %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Posts</h5>
+                    {% for recent_blog in recent_blogs %}
+                        <div class="mb-3">
+                            <a href="{% url 'app:blog-detail' recent_blog.pk %}" class="text-decoration-none">
+                                {{ recent_blog.title }}
+                            </a>
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i>{{ recent_blog.author.user.username }}
+                                <i class="fas fa-calendar-alt ms-2 me-1"></i>{{ recent_blog.post_date|date:"M d, Y" }}
+                            </small>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No recent posts</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Popular Authors</h5>
+                    {% for author in popular_authors %}
+                        <div class="mb-2">
+                            <a href="{% url 'app:author-detail' author.pk %}" class="text-decoration-none">
+                                {{ author.user.username }}
+                            </a>
+                            <small class="text-muted">({{ author.blog_set.count }} posts)</small>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No authors yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
